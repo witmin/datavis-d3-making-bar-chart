@@ -13,14 +13,14 @@ text {
 }
 
 .tick text {
-    color: dimgray;
+    color: #8c8c86;
 }
 .tick line {
     stroke: #C0C0BB;
 }
 .axis-label {
     font-size: 2em;
-    fill: lightslategray;
+    fill: #77776e;
 }
 .title {
     font-size: 1.2rem;

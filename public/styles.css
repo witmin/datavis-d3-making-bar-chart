@@ -1,6 +1,7 @@
 body {
     margin: 0;
     overflow: hidden;
+    font-family: "Helvetica Neue", Arial, sans-serif;
 }
 
 rect{
@@ -8,5 +9,21 @@ rect{
 }
 
 text {
-    font-size: 1.4em;
+    font-size: 1rem;
+}
+
+.tick text {
+    color: dimgray;
+}
+.tick line {
+    stroke: #C0C0BB;
+}
+.axis-label {
+    font-size: 2em;
+    fill: lightslategray;
+}
+.title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-transform: uppercase;
 }

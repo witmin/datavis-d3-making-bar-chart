@@ -38,6 +38,11 @@ const render = data => {
     const g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    const areaGenerator = area()
+        .x(d => xScale(xValue(d)))
+        .y0(innerHeight)
+        .y1(d => yScale(yValue(d)));
+
     const xAxis = axisBottom(xScale)
         .ticks(6)
         .tickSize(-innerHeight)
@@ -64,7 +69,6 @@ const render = data => {
         .attr('transform', `rotate(-90)`)
         .text(yAxisLabel);
 
-
     const xAxisG = g.append('g').call(xAxis)
         .attr('transform', `translate(0, ${innerHeight})`);
 
@@ -77,18 +81,14 @@ const render = data => {
         .attr('fill', 'black')
         .text(xAxisLabel);
 
-    const areaGenerator = area()
-        .x(d => xScale(xValue(d)))
-        .y0(innerHeight)
-        .y1(d => yScale(yValue(d)));
-
     g.append('path')
-        .attr('class','line-path')
+        .attr('class', 'line-path')
         .attr('d', areaGenerator(data));
 
-    g.append('text')
+    svg.append('text')
         .attr('class', 'title')
-        .attr('y', -10)
+        .attr('x', width / 2)
+        .attr('y', 60)
         .text(titleText);
 };
 

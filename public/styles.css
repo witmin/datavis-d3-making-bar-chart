@@ -4,9 +4,11 @@ body {
     font-family: "Helvetica Neue", Arial, sans-serif;
 }
 
-rect, circle{
-    fill: #fa52a0;
-    opacity: 0.5;
+.line-path {
+    fill: none;
+    stroke: #8f411b;
+    stroke-width: 5;
+    stroke-linejoin: round;
 }
 
 text {

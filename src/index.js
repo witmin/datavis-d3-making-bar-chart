@@ -3,7 +3,7 @@ import {
     csv,
     scaleLinear,
     max,
-    scaleBand,
+    scalePoint,
     axisLeft,
     axisBottom,
     format,
@@ -25,9 +25,10 @@ const render = data => {
 
     const xScale = scaleLinear()
         .domain([0, max(data, xValue)])
-        .range([0, innerWidth]);
+        .range([0, innerWidth])
+        .nice();
 
-    const yScale = scaleBand()
+    const yScale = scalePoint()
         .domain(data.map(yValue))
         .range([0, innerHeight])
         .padding(0.1);
@@ -44,9 +45,12 @@ const render = data => {
         .tickFormat(xAxisTickFormat)
         .tickSize(-innerHeight);
 
+    const yAxis = axisLeft(yScale)
+        .tickSize(-innerWidth);
+
     g.append('g')
-        .call(axisLeft(yScale))
-        .selectAll('.domain, .tick line')
+        .call(yAxis)
+        .selectAll('.domain')
         .remove();
 
     const xAxisG = g.append('g').call(xAxis)
@@ -61,11 +65,11 @@ const render = data => {
         .attr('fill', 'black')
         .text('Population');
 
-    g.selectAll('rect').data(data)
-        .enter().append('rect')
-        .attr('y', d => yScale(yValue(d)))
-        .attr('width', d => xScale(xValue(d)))
-        .attr('height', yScale.bandwidth());
+    g.selectAll('circle').data(data)
+        .enter().append('circle')
+        .attr('cy', d => yScale(yValue(d)))
+        .attr('cx', d => xScale(xValue(d)))
+        .attr('r', 8);
 
     g.append('text')
         .attr('class', 'title')

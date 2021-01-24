@@ -130,6 +130,41 @@
     return stop < start ? -step1 : step1;
   }
 
+  function max(values, valueof) {
+    var n = values.length,
+        i = -1,
+        value,
+        max;
+
+    if (valueof == null) {
+      while (++i < n) { // Find the first comparable value.
+        if ((value = values[i]) != null && value >= value) {
+          max = value;
+          while (++i < n) { // Compare the remaining values.
+            if ((value = values[i]) != null && value > max) {
+              max = value;
+            }
+          }
+        }
+      }
+    }
+
+    else {
+      while (++i < n) { // Find the first comparable value.
+        if ((value = valueof(values[i], i, values)) != null && value >= value) {
+          max = value;
+          while (++i < n) { // Compare the remaining values.
+            if ((value = valueof(values[i], i, values)) != null && value > max) {
+              max = value;
+            }
+          }
+        }
+      }
+    }
+
+    return max;
+  }
+
   var slice = Array.prototype.slice;
 
   function identity(x) {
@@ -5186,21 +5221,22 @@
   const height = +svg.attr('height');
 
   const render = data => {
-      const titleText = 'A Week Temperature in San Francisco';
-      const xValue = d => d.timestamp;
-      const xAxisLabel = 'Time';
-      const yValue = d => d.temperature;
-      const yAxisLabel = 'Temperature';
-      const margin = {top: 80, right: 40, bottom: 70, left: 105};
+      const titleText = 'World Population Area Chart 2015';
+      const xValue = d => d.year;
+      const xAxisLabel = 'Year';
+      const yValue = d => d.population;
+      const yAxisLabel = 'Population';
+      const margin = {top: 80, right: 40, bottom: 70, left: 165};
       const innerWidth = width - margin.left - margin.right;
       const innerHeight = height - margin.top - margin.bottom;
 
       const xScale = scaleTime()
           .domain(extent(data, xValue))
-          .range([0, innerWidth]);
+          .range([0, innerWidth])
+          .nice();
 
       const yScale = linear$1()
-          .domain(extent(data, yValue))
+          .domain([0, max(data, yValue)])
           .range([innerHeight, 0]);
 
       const g = svg.append('g')
@@ -5211,9 +5247,14 @@
           .tickSize(-innerHeight)
           .tickPadding(15);
 
+      const yAxisTickFormat = number =>
+          format('.1s')(number)
+              .replace('G', 'B');
+
       const yAxis = axisLeft(yScale)
           .tickSize(-innerWidth)
-          .tickPadding(10);
+          .tickPadding(10)
+          .tickFormat(yAxisTickFormat);
 
       const yAxisG = g.append('g').call(yAxis);
       yAxisG.selectAll('.domain').remove();
@@ -5255,10 +5296,10 @@
           .text(titleText);
   };
 
-  csv$1('temperature-in-san-francisco.csv').then(data => {
+  csv$1('world-population-by-year-2015.csv').then(data => {
       data.forEach(d => {
-          d.timestamp = new Date(d.timestamp);
-          d.temperature = +d.temperature;
+          d.year = new Date(d.year);
+          d.population = +d.population;
       });
       render(data);
   });

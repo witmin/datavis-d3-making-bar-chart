@@ -1,5 +1,5 @@
-# Making a line and area Chart with D3.js
-## A Week Temperature in San Francisco
+# Making an area Chart with D3.js
+## World Population
 Follow the video tutorial on FreeCodeCamp.org made by Curran Kelleher: https://www.youtube.com/watch?v=_8V5o2UHG0E
 
 This repository follows the section ⌨️ (3:15:06) Making a Bar Chart with D3.js and SVG

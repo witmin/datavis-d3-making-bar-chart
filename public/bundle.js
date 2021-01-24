@@ -5076,56 +5076,108 @@
     return line;
   }
 
-  function point(that, x, y) {
-    that._context.bezierCurveTo(
-      (2 * that._x0 + that._x1) / 3,
-      (2 * that._y0 + that._y1) / 3,
-      (that._x0 + 2 * that._x1) / 3,
-      (that._y0 + 2 * that._y1) / 3,
-      (that._x0 + 4 * that._x1 + x) / 6,
-      (that._y0 + 4 * that._y1 + y) / 6
-    );
-  }
+  function area() {
+    var x0 = x,
+        x1 = null,
+        y0 = constant$3(0),
+        y1 = y,
+        defined = constant$3(true),
+        context = null,
+        curve = curveLinear,
+        output = null;
 
-  function Basis(context) {
-    this._context = context;
-  }
+    function area(data) {
+      var i,
+          j,
+          k,
+          n = data.length,
+          d,
+          defined0 = false,
+          buffer,
+          x0z = new Array(n),
+          y0z = new Array(n);
 
-  Basis.prototype = {
-    areaStart: function() {
-      this._line = 0;
-    },
-    areaEnd: function() {
-      this._line = NaN;
-    },
-    lineStart: function() {
-      this._x0 = this._x1 =
-      this._y0 = this._y1 = NaN;
-      this._point = 0;
-    },
-    lineEnd: function() {
-      switch (this._point) {
-        case 3: point(this, this._x1, this._y1); // proceed
-        case 2: this._context.lineTo(this._x1, this._y1); break;
+      if (context == null) output = curve(buffer = path());
+
+      for (i = 0; i <= n; ++i) {
+        if (!(i < n && defined(d = data[i], i, data)) === defined0) {
+          if (defined0 = !defined0) {
+            j = i;
+            output.areaStart();
+            output.lineStart();
+          } else {
+            output.lineEnd();
+            output.lineStart();
+            for (k = i - 1; k >= j; --k) {
+              output.point(x0z[k], y0z[k]);
+            }
+            output.lineEnd();
+            output.areaEnd();
+          }
+        }
+        if (defined0) {
+          x0z[i] = +x0(d, i, data), y0z[i] = +y0(d, i, data);
+          output.point(x1 ? +x1(d, i, data) : x0z[i], y1 ? +y1(d, i, data) : y0z[i]);
+        }
       }
-      if (this._line || (this._line !== 0 && this._point === 1)) this._context.closePath();
-      this._line = 1 - this._line;
-    },
-    point: function(x, y) {
-      x = +x, y = +y;
-      switch (this._point) {
-        case 0: this._point = 1; this._line ? this._context.lineTo(x, y) : this._context.moveTo(x, y); break;
-        case 1: this._point = 2; break;
-        case 2: this._point = 3; this._context.lineTo((5 * this._x0 + this._x1) / 6, (5 * this._y0 + this._y1) / 6); // proceed
-        default: point(this, x, y); break;
-      }
-      this._x0 = this._x1, this._x1 = x;
-      this._y0 = this._y1, this._y1 = y;
+
+      if (buffer) return output = null, buffer + "" || null;
     }
-  };
 
-  function curveBasis(context) {
-    return new Basis(context);
+    function arealine() {
+      return line().defined(defined).curve(curve).context(context);
+    }
+
+    area.x = function(_) {
+      return arguments.length ? (x0 = typeof _ === "function" ? _ : constant$3(+_), x1 = null, area) : x0;
+    };
+
+    area.x0 = function(_) {
+      return arguments.length ? (x0 = typeof _ === "function" ? _ : constant$3(+_), area) : x0;
+    };
+
+    area.x1 = function(_) {
+      return arguments.length ? (x1 = _ == null ? null : typeof _ === "function" ? _ : constant$3(+_), area) : x1;
+    };
+
+    area.y = function(_) {
+      return arguments.length ? (y0 = typeof _ === "function" ? _ : constant$3(+_), y1 = null, area) : y0;
+    };
+
+    area.y0 = function(_) {
+      return arguments.length ? (y0 = typeof _ === "function" ? _ : constant$3(+_), area) : y0;
+    };
+
+    area.y1 = function(_) {
+      return arguments.length ? (y1 = _ == null ? null : typeof _ === "function" ? _ : constant$3(+_), area) : y1;
+    };
+
+    area.lineX0 =
+    area.lineY0 = function() {
+      return arealine().x(x0).y(y0);
+    };
+
+    area.lineY1 = function() {
+      return arealine().x(x0).y(y1);
+    };
+
+    area.lineX1 = function() {
+      return arealine().x(x1).y(y0);
+    };
+
+    area.defined = function(_) {
+      return arguments.length ? (defined = typeof _ === "function" ? _ : constant$3(!!_), area) : defined;
+    };
+
+    area.curve = function(_) {
+      return arguments.length ? (curve = _, context != null && (output = curve(context)), area) : curve;
+    };
+
+    area.context = function(_) {
+      return arguments.length ? (_ == null ? context = output = null : output = curve(context = _), area) : context;
+    };
+
+    return area;
   }
 
   const svg = select('svg');
@@ -5145,18 +5197,17 @@
 
       const xScale = scaleTime()
           .domain(extent(data, xValue))
-          .range([0, innerWidth])
-          .nice();
+          .range([0, innerWidth]);
 
       const yScale = linear$1()
           .domain(extent(data, yValue))
-          .range([innerHeight, 0])
-          .nice();
+          .range([innerHeight, 0]);
 
       const g = svg.append('g')
           .attr('transform', `translate(${margin.left},${margin.top})`);
 
       const xAxis = axisBottom(xScale)
+          .ticks(6)
           .tickSize(-innerHeight)
           .tickPadding(15);
 
@@ -5189,14 +5240,14 @@
           .attr('fill', 'black')
           .text(xAxisLabel);
 
-      const lineGenerator = line()
+      const areaGenerator = area()
           .x(d => xScale(xValue(d)))
-          .y(d => yScale(yValue(d)))
-          .curve(curveBasis);
+          .y0(innerHeight)
+          .y1(d => yScale(yValue(d)));
 
       g.append('path')
           .attr('class','line-path')
-          .attr('d', lineGenerator(data));
+          .attr('d', areaGenerator(data));
 
       g.append('text')
           .attr('class', 'title')

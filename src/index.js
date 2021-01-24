@@ -6,8 +6,7 @@ import {
     extent,
     axisLeft,
     axisBottom,
-    line,
-    curveBasis
+    area,
 } from 'd3';
 
 const svg = select('svg');
@@ -21,25 +20,23 @@ const render = data => {
     const xAxisLabel = 'Time';
     const yValue = d => d.temperature;
     const yAxisLabel = 'Temperature';
-    const circleRadius = 3;
     const margin = {top: 80, right: 40, bottom: 70, left: 105};
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
     const xScale = scaleTime()
         .domain(extent(data, xValue))
-        .range([0, innerWidth])
-        .nice();
+        .range([0, innerWidth]);
 
     const yScale = scaleLinear()
         .domain(extent(data, yValue))
-        .range([innerHeight, 0])
-        .nice();
+        .range([innerHeight, 0]);
 
     const g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
     const xAxis = axisBottom(xScale)
+        .ticks(6)
         .tickSize(-innerHeight)
         .tickPadding(15);
 
@@ -72,14 +69,14 @@ const render = data => {
         .attr('fill', 'black')
         .text(xAxisLabel);
 
-    const lineGenerator = line()
+    const areaGenerator = area()
         .x(d => xScale(xValue(d)))
-        .y(d => yScale(yValue(d)))
-        .curve(curveBasis);
+        .y0(innerHeight)
+        .y1(d => yScale(yValue(d)));
 
     g.append('path')
         .attr('class','line-path')
-        .attr('d', lineGenerator(data));
+        .attr('d', areaGenerator(data));
 
     g.append('text')
         .attr('class', 'title')

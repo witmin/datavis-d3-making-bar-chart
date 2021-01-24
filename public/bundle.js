@@ -40,18 +40,42 @@
   var ascendingBisect = bisector(ascending);
   var bisectRight = ascendingBisect.right;
 
-  function sequence(start, stop, step) {
-    start = +start, stop = +stop, step = (n = arguments.length) < 2 ? (stop = start, start = 0, 1) : n < 3 ? 1 : +step;
+  function extent(values, valueof) {
+    var n = values.length,
+        i = -1,
+        value,
+        min,
+        max;
 
-    var i = -1,
-        n = Math.max(0, Math.ceil((stop - start) / step)) | 0,
-        range = new Array(n);
-
-    while (++i < n) {
-      range[i] = start + i * step;
+    if (valueof == null) {
+      while (++i < n) { // Find the first comparable value.
+        if ((value = values[i]) != null && value >= value) {
+          min = max = value;
+          while (++i < n) { // Compare the remaining values.
+            if ((value = values[i]) != null) {
+              if (min > value) min = value;
+              if (max < value) max = value;
+            }
+          }
+        }
+      }
     }
 
-    return range;
+    else {
+      while (++i < n) { // Find the first comparable value.
+        if ((value = valueof(values[i], i, values)) != null && value >= value) {
+          min = max = value;
+          while (++i < n) { // Compare the remaining values.
+            if ((value = valueof(values[i], i, values)) != null) {
+              if (min > value) min = value;
+              if (max < value) max = value;
+            }
+          }
+        }
+      }
+    }
+
+    return [min, max];
   }
 
   var e10 = Math.sqrt(50),
@@ -104,41 +128,6 @@
     else if (error >= e5) step1 *= 5;
     else if (error >= e2) step1 *= 2;
     return stop < start ? -step1 : step1;
-  }
-
-  function max(values, valueof) {
-    var n = values.length,
-        i = -1,
-        value,
-        max;
-
-    if (valueof == null) {
-      while (++i < n) { // Find the first comparable value.
-        if ((value = values[i]) != null && value >= value) {
-          max = value;
-          while (++i < n) { // Compare the remaining values.
-            if ((value = values[i]) != null && value > max) {
-              max = value;
-            }
-          }
-        }
-      }
-    }
-
-    else {
-      while (++i < n) { // Find the first comparable value.
-        if ((value = valueof(values[i], i, values)) != null && value >= value) {
-          max = value;
-          while (++i < n) { // Compare the remaining values.
-            if ((value = valueof(values[i], i, values)) != null && value > max) {
-              max = value;
-            }
-          }
-        }
-      }
-    }
-
-    return max;
   }
 
   var slice = Array.prototype.slice;
@@ -3538,145 +3527,6 @@
   var map$2 = array.map;
   var slice$1 = array.slice;
 
-  var implicit = {name: "implicit"};
-
-  function ordinal() {
-    var index = map(),
-        domain = [],
-        range = [],
-        unknown = implicit;
-
-    function scale(d) {
-      var key = d + "", i = index.get(key);
-      if (!i) {
-        if (unknown !== implicit) return unknown;
-        index.set(key, i = domain.push(d));
-      }
-      return range[(i - 1) % range.length];
-    }
-
-    scale.domain = function(_) {
-      if (!arguments.length) return domain.slice();
-      domain = [], index = map();
-      var i = -1, n = _.length, d, key;
-      while (++i < n) if (!index.has(key = (d = _[i]) + "")) index.set(key, domain.push(d));
-      return scale;
-    };
-
-    scale.range = function(_) {
-      return arguments.length ? (range = slice$1.call(_), scale) : range.slice();
-    };
-
-    scale.unknown = function(_) {
-      return arguments.length ? (unknown = _, scale) : unknown;
-    };
-
-    scale.copy = function() {
-      return ordinal(domain, range).unknown(unknown);
-    };
-
-    initRange.apply(scale, arguments);
-
-    return scale;
-  }
-
-  function band() {
-    var scale = ordinal().unknown(undefined),
-        domain = scale.domain,
-        ordinalRange = scale.range,
-        range = [0, 1],
-        step,
-        bandwidth,
-        round = false,
-        paddingInner = 0,
-        paddingOuter = 0,
-        align = 0.5;
-
-    delete scale.unknown;
-
-    function rescale() {
-      var n = domain().length,
-          reverse = range[1] < range[0],
-          start = range[reverse - 0],
-          stop = range[1 - reverse];
-      step = (stop - start) / Math.max(1, n - paddingInner + paddingOuter * 2);
-      if (round) step = Math.floor(step);
-      start += (stop - start - step * (n - paddingInner)) * align;
-      bandwidth = step * (1 - paddingInner);
-      if (round) start = Math.round(start), bandwidth = Math.round(bandwidth);
-      var values = sequence(n).map(function(i) { return start + step * i; });
-      return ordinalRange(reverse ? values.reverse() : values);
-    }
-
-    scale.domain = function(_) {
-      return arguments.length ? (domain(_), rescale()) : domain();
-    };
-
-    scale.range = function(_) {
-      return arguments.length ? (range = [+_[0], +_[1]], rescale()) : range.slice();
-    };
-
-    scale.rangeRound = function(_) {
-      return range = [+_[0], +_[1]], round = true, rescale();
-    };
-
-    scale.bandwidth = function() {
-      return bandwidth;
-    };
-
-    scale.step = function() {
-      return step;
-    };
-
-    scale.round = function(_) {
-      return arguments.length ? (round = !!_, rescale()) : round;
-    };
-
-    scale.padding = function(_) {
-      return arguments.length ? (paddingInner = Math.min(1, paddingOuter = +_), rescale()) : paddingInner;
-    };
-
-    scale.paddingInner = function(_) {
-      return arguments.length ? (paddingInner = Math.min(1, _), rescale()) : paddingInner;
-    };
-
-    scale.paddingOuter = function(_) {
-      return arguments.length ? (paddingOuter = +_, rescale()) : paddingOuter;
-    };
-
-    scale.align = function(_) {
-      return arguments.length ? (align = Math.max(0, Math.min(1, _)), rescale()) : align;
-    };
-
-    scale.copy = function() {
-      return band(domain(), range)
-          .round(round)
-          .paddingInner(paddingInner)
-          .paddingOuter(paddingOuter)
-          .align(align);
-    };
-
-    return initRange.apply(rescale(), arguments);
-  }
-
-  function pointish(scale) {
-    var copy = scale.copy;
-
-    scale.padding = scale.paddingOuter;
-    delete scale.paddingInner;
-    delete scale.paddingOuter;
-
-    scale.copy = function() {
-      return pointish(copy());
-    };
-
-    return scale;
-  }
-
-  function point() {
-    return pointish(band.apply(null, arguments).paddingInner(1));
-  }
-
   function constant$2(x) {
     return function() {
       return x;
@@ -3901,49 +3751,63 @@
     return linearish(scale);
   }
 
-  const titleText = 'Top 10 Most Populous Countries';
-
   const svg = select('svg');
 
   const width = +svg.attr('width');
   const height = +svg.attr('height');
 
+  // d.mpg = +d.mpg;
+  // d.cylinders = +d.cylinders;
+  // d.displacement = +d.displacement;
+  // d.horsepower = +d.horsepower;
+  // d.weight = +d.weight;
+  // d.acceleration = +d.acceleration;
+  // d.year = +d.year;
+
   const render = data => {
-      const xValue = d => d['population'];
-      const yValue = d => d.country;
-      const margin = {top: 50, right: 40, bottom: 70, left: 200};
+      const titleText = 'Cars: horsepower vs weight';
+      const xValue = d => d.horsepower;
+      const xAxisLabel = 'Horsepower';
+      const yValue = d => d.weight;
+      const yAxisLabel = 'Weight';
+      const circleRadius = 5;
+      const margin = {top: 80, right: 40, bottom: 70, left: 200};
       const innerWidth = width - margin.left - margin.right;
       const innerHeight = height - margin.top - margin.bottom;
 
       const xScale = linear$1()
-          .domain([0, max(data, xValue)])
+          .domain(extent(data, xValue))
           .range([0, innerWidth])
           .nice();
 
-      const yScale = point()
-          .domain(data.map(yValue))
+      const yScale = linear$1()
+          .domain(extent(data, yValue))
           .range([0, innerHeight])
-          .padding(0.1);
-
+          .nice();
 
       const g = svg.append('g')
           .attr('transform', `translate(${margin.left},${margin.top})`);
 
-      const xAxisTickFormat = number =>
-          format('.3s')(number)
-              .replace('G', 'B');
-
       const xAxis = axisBottom(xScale)
-          .tickFormat(xAxisTickFormat)
-          .tickSize(-innerHeight);
+          .tickSize(-innerHeight)
+          .tickPadding(15);
 
       const yAxis = axisLeft(yScale)
-          .tickSize(-innerWidth);
+          .tickSize(-innerWidth)
+          .tickPadding(10);
 
-      g.append('g')
-          .call(yAxis)
-          .selectAll('.domain')
-          .remove();
+      const yAxisG = g.append('g').call(yAxis);
+      yAxisG.selectAll('.domain').remove();
+
+      yAxisG.append('text')
+          .attr('class', 'axis-label')
+          .attr('x', -innerHeight / 2)
+          .attr('y', -65)
+          .attr('fill', 'black')
+          .attr('text-anchor', 'middle')
+          .attr('transform', `rotate(-90)`)
+          .text(yAxisLabel);
+
 
       const xAxisG = g.append('g').call(xAxis)
           .attr('transform', `translate(0, ${innerHeight})`);
@@ -3952,16 +3816,16 @@
 
       xAxisG.append('text')
           .attr('class', 'axis-label')
-          .attr('y', 50)
-          .attr('x', innerWidth/2)
+          .attr('y', 60)
+          .attr('x', innerWidth / 2)
           .attr('fill', 'black')
-          .text('Population');
+          .text(xAxisLabel);
 
       g.selectAll('circle').data(data)
           .enter().append('circle')
           .attr('cy', d => yScale(yValue(d)))
           .attr('cx', d => xScale(xValue(d)))
-          .attr('r', 8);
+          .attr('r', circleRadius);
 
       g.append('text')
           .attr('class', 'title')
@@ -3969,9 +3833,15 @@
           .text(titleText);
   };
 
-  csv$1('data.csv').then(data => {
+  csv$1('auto-mpg.csv').then(data => {
       data.forEach(d => {
-          d.population = +d.population * 1000;
+          d.mpg = +d.mpg;
+          d.cylinders = +d.cylinders;
+          d.displacement = +d.displacement;
+          d.horsepower = +d.horsepower;
+          d.weight = +d.weight;
+          d.acceleration = +d.acceleration;
+          d.year = +d.year;
       });
       render(data);
   });

@@ -5,7 +5,10 @@ This repository follows the section ⌨️ (3:15:06) Making a Bar Chart with D3.
 
 The source code by Curran is on [VizHub](https://vizhub.com/curran/326730c80fc54969ae501fb58c8cb94b?edit=files&file=data.csv&mode=mini)
 
-This repository used [rollup.js](https://rollupjs.org/) as the JavaScript module bundler. 
+This repository used [rollup.js](https://rollupjs.org/) as the JavaScript module bundler.
+
+## Demo of the Main branch
+
 
 ## View the outcome
 Open `public/index.html` in modern browser such as Chrome or Firefox directly. 
